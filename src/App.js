@@ -8,6 +8,7 @@ class App extends Component {
     email: ''
   };
   onAuthStateChanged = user => {
+    console.log(user);
     if (user) {
       this.setState({
         logged: true,
@@ -25,15 +26,36 @@ class App extends Component {
   componentDidMount = () => {
     this.auth = firebase.auth();
     this.auth.onAuthStateChanged(this.onAuthStateChanged);
+    firebase
+      .auth()
+      .getRedirectResult()
+      .then(function(result) {
+        if (result.credential) {
+          window.alert('usuario logado!');
+          var token = result.credential.accessToken;
+          var user = result.user;
+          console.log('ok', token, user);
+        }
+      })
+      .catch(function(error) {
+        window.alert('erro no login: ' + error.message);
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        console.log('nok', errorCode, errorMessage);
+      });
   };
 
-  onGooglePopup = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    this.auth.signInWithPopup(provider);
+  doAuth = provider => {
+    firebase.auth().signInWithRedirect(provider);
   };
-  onGoogleRedirect = () => {
+
+  onFacebook = () => {
+    const provider = new firebase.auth.FacebookAuthProvider();
+    this.doAuth(provider);
+  };
+  onGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    this.auth.signInWithRedirect(provider);
+    this.doAuth(provider);
   };
   onEmailCreate = () => {
     const email = window.prompt('email');
@@ -73,15 +95,15 @@ class App extends Component {
       <div>
         <center>
           {this.renderUserInfo()}
-          <button onClick={this.onGooglePopup} hidden={this.state.logged}>
-            Login Google (popup)
+          <br />
+          <button onClick={this.onGoogle} hidden={this.state.logged}>
+            Login Google
           </button>
           <br />
-          <button onClick={this.onGoogleRedirect} hidden={this.state.logged}>
-            Login Google (redirect)
+          <button onClick={this.onFacebook} hidden={this.state.logged}>
+            Login Facebook
           </button>
           <br />
-
           <button onClick={this.onEmailCreate} hidden={this.state.logged}>
             Criar conta - email/senha
           </button>
